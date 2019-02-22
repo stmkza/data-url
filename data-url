@@ -1,0 +1,48 @@
+#!/bin/bash
+function displayErrorAndExit () {
+  message=""
+  if [[ $# -ge 2 ]]; then
+    message=$1
+  fi
+
+  returnValue=1
+  if [[ $# -ge 3 ]]; then
+    returnValue=$2
+  fi
+
+  echo -e "$message" >&2
+
+  exit $returnValue
+}
+
+format="p"
+
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+  displayErrorAndExit "Usage: $0 <file path> [format=p]\n\nformat:\n  p: Plain (default value)\n  c: CSS (ex: url(\"...\") )" 1
+fi
+
+if [[ "$2" = "c" ]]; then
+  format="c"
+fi
+
+case "$2" in
+  "c" ) format="c" ;;
+  "p" ) format="p" ;;
+  "" ) ;;
+  * ) displayErrorAndExit "Invalid format: $2" 2 ;;
+esac
+
+if [[ ! -f "$1" ]]; then
+  displayErrorAndExit "File not found: $1" 3
+fi
+
+result="data:`file -b --mime-type $1`;base64,`base64 $1`"
+
+if [[ "$format" = "p" ]]; then
+  echo $result
+  exit
+elif [[ "$format" = "c" ]]; then
+  echo "url(\"$result\")"
+  exit
+fi
+
